@@ -1,6 +1,6 @@
 const express = require('express');
 const Employee = require('./user');
-const Attendance = require('.Attendance');
+const Attendance = require('./Attendance');
 const router = express.Router();
 router.get('/user', async(req, res) => {
     const employees = await Employee.find({}, { password: 0 });
