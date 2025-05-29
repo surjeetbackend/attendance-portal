@@ -24,9 +24,9 @@ mongoose.connect(process.env.MONGO_URI)
     .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
-const authRoutes = require('./route/auth');
-const attendanceRoutes = require('./route/attendanc');
-const adminRoutes = require('./route/admin');
+const authRoutes = require('./auth');
+const attendanceRoutes = require('./attendanc');
+const adminRoutes = require('./admin');
 
 app.use('/api', authRoutes);
 app.use('/api/attendanc', attendanceRoutes);
