@@ -26,7 +26,7 @@ router.post('/mark', async(req, res) => {
     }
 
     const now = new Date();
-    const time = now.toLocaleTimeString();
+    const time = now.toLocaleTimeString("en-US", { timeZone: "Asia/Kolkata" });
     const date = now.toLocaleDateString();
 
     try {
