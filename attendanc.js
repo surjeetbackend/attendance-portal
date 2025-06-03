@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const Attendance = require('./Attendance');
+const Attendance = require('../model/Attendance');
 require('dotenv').config();
 
 async function getAddressFromCoords(coords) {
@@ -34,35 +34,52 @@ router.post('/mark', async(req, res) => {
 
         let attendance = await Attendance.findOne({ empId, date });
 
-        if (!attendance) {
-            attendance = new Attendance({
+        // If attendance exists
+        if (attendance) {
+            // If trying to mark 'in' again
+            if (type === 'in' && attendance.inTime) {
+                return res.status(400).json({ error: 'In-Time already marked for today' });
+            }
+
+            // If trying to mark 'out' again
+            if (type === 'out' && attendance.outTime) {
+                return res.status(400).json({ error: 'Out-Time already marked for today' });
+            }
+
+            // Update the existing record
+            if (type === 'in') {
+                attendance.inTime = time;
+                attendance.inLocation = locationName;
+                if (photo) attendance.photo = photo;
+            } else if (type === 'out') {
+                attendance.outTime = time;
+                attendance.outLocation = locationName;
+            }
+
+            await attendance.save();
+            return res.json({ message: `Attendance ${type === 'in' ? 'in-time' : 'out-time'} marked successfully` });
+
+        } else {
+            // Create new record if it doesn't exist
+            const newAttendance = new Attendance({
                 empId,
                 name,
-                photo: photo || '', // Optional
+                photo: photo || '',
                 date,
                 inTime: type === 'in' ? time : '',
                 outTime: type === 'out' ? time : '',
                 inLocation: type === 'in' ? locationName : '',
                 outLocation: type === 'out' ? locationName : '',
             });
-        } else {
-            if (type === 'in') {
-                attendance.inTime = time;
-                attendance.inLocation = locationName;
-                if (photo) attendance.photo = photo; // Update photo if available
-            } else if (type === 'out') {
-                attendance.outTime = time;
-                attendance.outLocation = locationName;
-            }
+
+            await newAttendance.save();
+            return res.json({ message: `Attendance ${type === 'in' ? 'in-time' : 'out-time'} marked successfully` });
         }
-
-        await attendance.save();
-
-        res.json({ message: `Attendance ${type === 'in' ? 'in-time' : 'out-time'} marked successfully` });
     } catch (err) {
         console.error('Attendance Save Error:', err);
         res.status(500).json({ error: 'Failed to mark attendance' });
     }
 });
+
 
 module.exports = router;
