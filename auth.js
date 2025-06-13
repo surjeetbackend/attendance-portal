@@ -26,10 +26,10 @@ mongoose.connect(process.env.MONGO_URI)
     .catch((err) => console.error('MongoDB connection error:', err));
 
 // Routes
-const authRoutes = require('./route/auth');
-const attendanceRoutes = require('./route/attendanc');
+const authRoutes = require('./auth');
+const attendanceRoutes = require('./attendanc');
 app.use(express.json())
-const adminRoutes = require('./route/admin');
+const adminRoutes = require('./admin');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/attendanc', attendanceRoutes);
