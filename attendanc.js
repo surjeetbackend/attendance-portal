@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const Attendance = require('./Attendance');
+const Attendance = require('../model/Attendance');
 require('dotenv').config();
 
 async function getAddressFromCoords(coords) {
