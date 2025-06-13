@@ -1,87 +1,41 @@
 const express = require('express');
-const router = express.Router();
-const User = require('../model/user');
-const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const path = require('path');
+const bodyParser = require('body-parser');
+require('dotenv').config();
 
-// Register a new employee
-router.post('/register-form', async(req, res) => {
-    try {
-        const { name, email, password, phone, photo, gender, dob, shift } = req.body;
-    //     const existing = await Employee.findOne({
-    //      phone
-    //           });
 
-    // if (existing) {
-    //   return res.status(400).json({
-    //     error: 'Employee ID or Phone Number already exists'
-    //   });
-    // }
+dotenv.config();
 
-        // Validate required fields
-        if (!name || !email || !password || !phone || !photo) {
-            return res.status(400).json({ error: 'Please fill all required fields' });
-        }
+const app = express();
+const PORT = process.env.PORT || 5000;
 
-        // Check if email already exists
-        const existingUser = await User.findOne({ email },{phone});
-        if (existingUser) {
-            return res.status(409).json({ error: 'User with this email or phone number already exists  ' });
-        }
+// Middleware
+app.use(cors());
 
-        // Generate employee ID
-        const empId = name.substring(0, 3).toUpperCase() + Math.floor(100 + Math.random() * 900);
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const hireDate = new Date().toLocaleDateString();
+app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+app.use('/upload', express.static(path.join(__dirname, '/upload')));
 
-        // Create and save user
-        const newUser = new User({
-            empId,
-            name: name.trim(),
-            email: email.trim().toLowerCase(),
-            phone: phone.trim(),
-            photo,
-            gender: gender,
-            dob: dob,
-            shift: shift,
-            hireDate,
-            password: hashedPassword,
-             originalPassword: password 
-        });
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log('MongoDB connected'))
+    .catch((err) => console.error('MongoDB connection error:', err));
 
-        await newUser.save();
-        res.json({ message: 'Registered successfully', empId });
+// Routes
+const authRoutes = require('./route/auth');
+const attendanceRoutes = require('./route/attendanc');
+app.use(express.json())
+const adminRoutes = require('./route/admin');
 
-    } catch (err) {
-        console.error('Register error:', err );
-        res.status(500).json({ error: 'Server error during registration' });
-    }
+app.use('/api/auth', authRoutes);
+app.use('/api/attendanc', attendanceRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
-
-// Employee login
-router.post('/login', async(req, res) => {
-    try {
-        const { empId, password } = req.body;
-
-        if (!empId || !password) {
-            return res.status(400).json({ error: 'Please provide employee ID and password' });
-        }
-
-        const user = await User.findOne({ empId });
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid password' });
-        }
-
-        res.json({ message: 'Login successful', name: user.name, empId: user.empId });
-
-    } catch (err) {
-        console.error('Login error:', err);
-        res.status(500).json({ error: 'Server error during login' });
-    }
-});
-
-module.exports = router;
