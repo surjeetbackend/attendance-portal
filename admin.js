@@ -1,6 +1,6 @@
 const express = require('express');
-const Employee = require('../model/user');
-const Attendance = require('../model/Attendance');
+const Employee = require('./user');
+const Attendance = require('./Attendance');
 const router = express.Router();
 
 // ✅ Public: Get Employees
